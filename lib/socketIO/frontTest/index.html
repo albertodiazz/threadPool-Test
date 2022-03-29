@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+    <html>
+        <head>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+
+        </head>
+        <body>
+
+            <button id='btn-start' type="button" >Start</button>
+            <button id='btn-unirme' type="button" >Se unio un jugador</button>
+
+            <button id='btn-seleccion' type="button" >Seleccion personjae</button>
+            <button id='btn-confirmarSeleccion' type="button" >Confirmar seleccion</button>
+
+            <button id='btn-nivelInstrucciones' type="button" >Instrucciones</button>
+            <button id='btn-retoA' type="button" >RetoA</button>
+            <button id='btn-retoB' type="button" >RetoB</button>
+            <button id='btn-popup' type="button" >PopUp</button>
+
+            <button id='btn-leaveGame' type="button" >Leave Game</button>
+            <button id='btn-ExitGame' type="button" >Exit Game</button>
+
+            <button id='btn-startCronometro' type="button" >Start Cronometro</button>
+
+            <button id='btn-resetAll' type="button" >Reset All</button>
+            <button id='btn-cambiarNivel' type="button" >Cambiar Nivel</button>
+
+            <script >
+
+                var socket = io();
+                var ID;
+
+                socket.on("connect",(data) => {
+                    // alert(`${socket.id}, data`)
+                    ID = socket.id
+                });
+
+                socket.on("server:level",(data) => {
+                    console.log(data)
+                })
+
+                socket.on("server:time",(data) => {
+                    console.log(data)
+                })
+
+                function start(){
+                    // Solo avanzamos de nivel mas no agregamos el ID
+                    let msg = {
+                        'ID' : ID,
+                        'name' : 'nivel0'
+                    }
+                    socket.emit("/user/start",JSON.stringify(msg))
+                }
+
+
+                function unirme(){
+                    // Aqui agreagamos el ID
+                    let msg = {
+                        'ID' : ID,
+                        'name' : 'nivel1'
+                    }
+                    socket.emit("/user/unirme",JSON.stringify(msg))
+                }
+
+                //////////////////////////////////////////
+                //////////////////////////////////////////
+                let x = Math.floor((Math.random() * 10) + 1);
+                function seleccion(){
+                    let msg = {
+                        'ID' : ID,
+                        'name' : 'nivel2',
+                        'seleccion' : [
+                         x.toString(),
+                            'False'
+                        ]
+                    }
+                    socket.emit("/player/seleccion",JSON.stringify(msg))
+                }
+
+                function seleccionConfirmar(){
+                    let msg = {
+                        'ID' : ID,
+                        'name': 'nivel2',
+                        'seleccion' : [
+                         x.toString(),
+                         'True'
+                        ]
+                    }
+                    socket.emit("/player/seleccion",JSON.stringify(msg))
+                }
+
+                //////////////////////////////////////////
+                //////////////////////////////////////////
+                function nivelInstrucciones(){
+                    let msg = {
+                        'type' : 'Momentos', // 'Retos'
+                        'name' : 'nivel3',
+                        'cambioNivel': 'adelante' // 'atras'
+                    }
+                    socket.emit("/nivel/cambiar",JSON.stringify(msg))
+                }
+
+                function nivelCambiar(){
+                    let msg = {
+                        'type' : 'Retos', // 'Retos'
+                        'name' : 'nivel10',
+                        'cambioNivel': 'adelante' // 'atras'
+                    }
+                    socket.emit("/nivel/cambiar",JSON.stringify(msg))
+                }
+
+
+                function retoA(){
+                    let msg = {
+                        'type' : 'Retos',
+                        'name' : 'nivel6',
+                        'respuesta': '1'
+                    }
+                    socket.emit("/actividades",JSON.stringify(msg))
+                }
+                let rr = Math.floor((Math.random() * 3) + 1);
+                function retoB(){
+                    let msg = {
+                        'type' : 'Retos',
+                        'name' : 'nivel7',
+                        'respuesta': rr.toString()
+                    }
+                    socket.emit("/actividades",JSON.stringify(msg))
+                }
+                function popup(){
+                    let msg = {
+                        'type' : 'Retos',
+                        'name' : 'nivel7'
+                    }
+                    socket.emit("/popup",JSON.stringify(msg))
+                }
+                //////////////////////////////////////////
+                //////////////////////////////////////////
+                function leaveGame(){
+                    let msg = {
+                        'ID' : ID
+                    }
+                    socket.emit("/player/changeStatus",JSON.stringify(msg))
+                }
+
+                function exitGame(){
+                    let msg = {
+                        'type' : 'Momentos', // 'Retos'
+                        'name' : 'nivel99',
+                    }
+                    socket.emit("/sesion/exit",JSON.stringify(msg))
+                }
+
+                function startCronometro(){
+                    let msg = {
+                        'Cronometro': 'Start'
+                    }
+                    socket.emit("/player/seleccion",JSON.stringify(msg))
+                }
+
+                function resetAll(){
+                    let msg = {
+                        'ID' : ID
+                    }
+                    socket.emit("/sesion/resetAll",JSON.stringify(msg))
+                }
+
+
+                document.getElementById('btn-start').onclick = start
+                document.getElementById('btn-unirme').onclick = unirme
+                document.getElementById('btn-seleccion').onclick = seleccion
+                document.getElementById('btn-confirmarSeleccion').onclick = seleccionConfirmar
+                document.getElementById('btn-nivelInstrucciones').onclick = nivelInstrucciones
+                document.getElementById('btn-retoA').onclick = retoA
+                document.getElementById('btn-retoB').onclick = retoB
+                document.getElementById('btn-popup').onclick = popup
+                document.getElementById('btn-leaveGame').onclick = leaveGame
+                document.getElementById('btn-ExitGame').onclick = exitGame
+                document.getElementById('btn-startCronometro').onclick = startCronometro
+                document.getElementById('btn-resetAll').onclick = resetAll
+                document.getElementById('btn-cambiarNivel').onclick = nivelCambiar
+            </script>
+        </body>
+</html>
