@@ -1,4 +1,7 @@
-
+import asyncio
+import concurrent
+from websockets import serve 
+import websockets 
 import threading
 import flask
 from lib import SocketIO, disconnect, emit
@@ -25,6 +28,7 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode=c.ASYNC_MODE)
 CORS(app)
 
 work_queue = queue.Queue()
+CLIENTS = set()
 
 
 class SocketIOEventos(Exception):
@@ -43,7 +47,7 @@ if c.INDEX_MODE:
 else:
     @app.route('/')
     def index():
-        return '<p>Hellow World desde Flask </p>'
+        return '<p>Hello World desde Flask </p>'
 
 
 @socketio.on('connect')
@@ -94,14 +98,15 @@ def on_disconnect():
         return
 
 
-@socketio.on('/user/start')
+@socketio.on('/user/exitStandby')
 def userStart(jsonMsg):
     """[Solo funciona para cambiar el video]"""
     # Una vez recibamos el ID de quien sea empezamos la applicacion
     # Aqui no importa si son dos o mas jugadores
     try:
-        msg = json.loads(jsonMsg)
-        if len(msg['ID']) >= 0:
+        msg = flask.request.sid
+        asyncio.run(sendMessage(msg='Hola desde Python'))
+        if len(msg) >= 0:
             # Aqui ejecutamos la funcion
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             c.DATA_TO_FRONT['level'] = 1
@@ -109,7 +114,7 @@ def userStart(jsonMsg):
                  json.dumps(c.DATA_TO_FRONT, indent=4),
                  broadcast=True)
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-            app.logger.info({'userStart': {'ID': msg['ID']}})
+            app.logger.info({'userStart': {'ID': msg}})
         else:
             raise SocketIOEventos({
                 'userStart': 'no recivimos el ID del participante'
@@ -123,18 +128,18 @@ def userUnirme(jsonMsg):
     """[Aqui es donde creamos el Jugador]"""
     # Aqui es donde manejamos los usuarios que se unan al juego
     try:
-        msg = json.loads(jsonMsg)
-        if len(msg['ID']) >= 0:
+        ID = flask.request.sid
+        if len(ID) >= 0:
             # Aqui ejecutamos la funcion
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-            c.DATA_TO_FRONT['players'].append(msg['ID'])
+            c.DATA_TO_FRONT['players'].append(ID)
             emit(c.SERVER_LEVEL,
                  json.dumps(c.DATA_TO_FRONT, indent=4),
                  broadcast=True)
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-            changeTipo.change_to_player(msg['ID'])
+            changeTipo.change_to_player(ID)
             ##########################################
             '''IMPORTANTE aqui revizamos el modo de juego
                una vez acabado el temporizador'''
@@ -154,7 +159,7 @@ def userUnirme(jsonMsg):
 
                 # GLOBAL
                 c.THREADS_CRONOMETRO = _waitMoments_.is_alive()
-            app.logger.info({'userUnirme': {'ID': msg['ID']}})
+            app.logger.info({'userUnirme': {'ID': ID}})
         else:
             raise SocketIOEventos({
                 'userUnirme': 'no recivimos el ID del participante'
@@ -471,11 +476,80 @@ def resetAll(jsonMsg):
         return
 
 
+# ------------------------------------------------------------------------- 
+# [MutiThreating Execution]
+# ------------------------------------------------------------------------- 
 def runSocketIO():
     print('Iniciando Socket IO')
-    socketio.run(app, port=c.PORT, debug=c.DEBUG_MODE)
+    socketio.run(app, port=c.PORT)
 
+
+async def handler(websocket):
+    CLIENTS.add(websocket)
+    async for message in websocket:
+        try:
+            # await websocket.send(json.dumps({'statusCode': 200}))
+            await broadcast(json.dumps({'starusCode': 200,
+                                        'body': json.dumps(c.DATA_TO_FRONT)}))
+            print('\n Estoy en el Handler: {} - Type: {} \n'.format(message, type(message)))
+            # print(c.DATA_TO_FRONT)
+        except TypeError as error:
+            await websocket.send(json.dumps({'statusCode': 400}))
+            print(error)
+            pass
+
+
+async def broadcast(message):
+    # En esta funcion obtenemos la cantidad de clientes conectados y es donde
+    # les enviamos el mensaje a todos los cliente 
+    # Hay una mejor manera de hacer esto en la documentacion The concurrent way
+    # https://websockets.readthedocs.io/en/stable/topics/broadcast.html
+    for websocket in CLIENTS.copy():
+        try:
+            await websocket.send(message)
+        except websockets.ConnectionClosed:
+            pass
+
+
+async def sendMessage(msg):
+    '''
+        [args : str]: [Puede ser cualquier cosa solo es el pretexto 
+                       para activar la funcion handler]
+    '''
+    # Estoy seguro que esto se puede mejorar y asi poder activar el handler
+    # de forma directa sin necesidad de hacer esto.
+    # Se me ocurre probar con Queue
+    async with websockets.connect('ws://localhost:8765') as websocket:
+        await websocket.send(msg)
+        await websocket.recv()
+
+
+async def execute_WebSocket():
+    print('Inciando WebSocket')
+    async with serve(handler, "localhost", 8765):
+        await asyncio.Future()  # run forever
+
+
+async def main(task=2):
+    # async with serve(handler, "localhost", 8765):
+    #     await asyncio.Future()  # run forever
+    global _shutdown
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+        loop = asyncio.get_running_loop()
+        futures = [
+            await loop.run_in_executor(pool, execute_WebSocket),
+            loop.run_in_executor(pool, runSocketIO)
+        ]
+        try:
+            results = await asyncio.gather(*futures, return_exceptions=False)
+        except Exception as ex:
+            print("Caught error executing task", ex)
+            _shutdown = True
+            raise
+        print(f"Fnished processing, got results: {results}")
+# ------------------------------------------------------------------------- 
+# ------------------------------------------------------------------------- 
+                                        
 
 if __name__ == '__main__':
-    print('Inciando App de Radiografias del Banco de Mexico')
-    runSocketIO()
+    asyncio.run(main())

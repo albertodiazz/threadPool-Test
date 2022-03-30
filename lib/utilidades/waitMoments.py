@@ -37,9 +37,10 @@ Cliente que es quien decide que nos regresemos al prinicpio de la aplicacion
 """
 
 
-def wait_join_players(whichLevel=2):
+def wait_join_players(whichLevel=3):
     # Esperamos a los usuarios que se unen a la sesion de player
     # en base a c.MAX_JUGADORES
+    # Existe una regla de que solo se puede jugar de dos jugadores o mas
     while True:
         if c.CRONOMETRO == 'PLAY':
             player = pd.read_csv(c.DIR_DATA+'info_sesion.csv', index_col=0)
@@ -65,17 +66,32 @@ def wait_join_players(whichLevel=2):
                          broadcast=True)
                     break
         elif c.CRONOMETRO == 'STOP':
-            print('<<<<<<<<<<<<<<<<<<<<<<<<',
-                  'Cronometro Stop from Wait Players',
-                  '>>>>>>>>>>>>>>>>>>>>>>>>>')
-            ##############################
-            # Cambiamos de nivel
-            ##############################
-            c.DATA_TO_FRONT['level'] = whichLevel
-            emit(c.SERVER_LEVEL,
-                 json.dumps(c.DATA_TO_FRONT, indent=4),
-                 broadcast=True)
-            break
+            if len(joinAlll) >= c.MIN_JUGADORES:
+                print('<<<<<<<<<<<<<<<<<<<<<<<<',
+                      'Cronometro Stop from Wait Players',
+                      '>>>>>>>>>>>>>>>>>>>>>>>>>')
+                ##############################
+                # Cambiamos de nivel
+                ##############################
+                c.DATA_TO_FRONT['level'] = whichLevel
+                emit(c.SERVER_LEVEL,
+                     json.dumps(c.DATA_TO_FRONT, indent=4),
+                     broadcast=True)
+                break
+            else:
+                print('<<<<<<<<<<<<<<<<<<<<<<<<',
+                      'Cronometro Stop from Wait Players',
+                      '>>>>>>>>>>>>>>>>>>>>>>>>>')
+                ##############################
+                # Regresamos ha standby. No se llego al minimo de jugadores
+                # necesarios para iniciar la actividad
+                ##############################
+                c.DATA_TO_FRONT['level'] = 0 
+                emit(c.SERVER_LEVEL,
+                     json.dumps(c.DATA_TO_FRONT, indent=4),
+                     broadcast=True)
+                break
+
 
 
 def wait_confirmacion_characters(whichLevel=3):

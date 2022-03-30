@@ -7,7 +7,7 @@ ASYNC_MODE = None
 # Aqui seteamos si queremos usar el index html
 INDEX_MODE = True
 # Aqui es donde tenemos almacenado el index HTML
-DIR_INDEX = '/mnt/d/trabajo/cocay/ramodelacion_Mide/radioGrafia_BancoCentral/Backend/lib/socketIO/frontTest/' # noqa
+DIR_INDEX = '/mnt/d/trabajo/cocay/ramodelacion_Mide/3_1_navegandoLaEstabilidad/Backend/lib/socketIO/frontTest/' # noqa
 # Aqui seteamos el url de la carpeta data
 DIR_DATA = 'data/'
 SERVER_LEVEL = 'server:level'
@@ -54,7 +54,7 @@ DATA_TO_FRONT = {
 # Temporizador para seleccionar personajes
 TIME_SECONDS = 30
 # Temporizador para unirse al juego
-JOIN_SECONDS = 3
+JOIN_SECONDS = 25
 # Segundos de momentos
 MOMENTOS_SECONDS = 3
 ####################################
@@ -63,5 +63,7 @@ MOMENTOS_SECONDS = 3
 # de jugadores, sin embargo esta varibale es necesaria setearla,
 # para el tiempo de espera en la pantalla de unirse, ya que si se
 # se unes los dictados por esta variable omitimos el cronometro
-MAX_JUGADORES = 3
+MAX_JUGADORES = 4
+# Cantidad minima de jugadores para poder empezar la actividad
+MIN_JUGADORES = 2
 ####################################

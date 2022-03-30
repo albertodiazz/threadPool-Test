@@ -6,7 +6,7 @@
         </head>
         <body>
 
-            <button id='btn-start' type="button" >Start</button>
+            <button id='btn-start' type="button" >Exit Standby</button>
             <button id='btn-unirme' type="button" >Se unio un jugador</button>
 
             <button id='btn-seleccion' type="button" >Seleccion personjae</button>
@@ -49,7 +49,7 @@
                         'ID' : ID,
                         'name' : 'nivel0'
                     }
-                    socket.emit("/user/start",JSON.stringify(msg))
+                    socket.emit("/user/exitStandby",JSON.stringify(msg))
                 }
 
 
