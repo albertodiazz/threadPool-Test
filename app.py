@@ -1,7 +1,7 @@
 import asyncio
+import websockets 
 import concurrent
 from websockets import serve 
-import websockets 
 import threading
 import flask
 from lib import SocketIO, disconnect, emit
@@ -21,6 +21,8 @@ from lib import waitMoments
 from lib import handle_json
 from lib import updateModoDeJuego
 from lib import personajesArray
+from lib import webSocketMessage 
+from lib import watcher 
 from lib import CORS
 
 app = Flask(__name__, template_folder=c.DIR_INDEX)
@@ -54,6 +56,13 @@ else:
 def connect(evento):
     # Aqui no importa si son dos o mas jugadores
     try:
+        # TODO
+        # [] Se esta incializando varias veces hay que arreglar eso
+        _watcher_= threading.Thread(target=copy_current_request_context(watcher.run)) # noqa
+        if _watcher_.is_alive():
+            print('WATCHER is running')
+        else:
+            _watcher_.start()
         # Comprobamos conexiones de clientes
         app.logger.info('connect: ',
                         'Alguien se conecto al servidor: ',
@@ -61,6 +70,7 @@ def connect(evento):
         # Creamos jugador por sesion con el atributo user
         # en unirse se lo cambiamos a player
         funcionesJugador.create_player(flask.request.sid)
+        asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
         emit(c.SERVER_LEVEL,
              json.dumps(c.DATA_TO_FRONT, indent=4),
              broadcast=True)
@@ -82,11 +92,7 @@ def on_disconnect():
         except ValueError:
             # No existe en la lista
             pass
-        try:
-            c.DATA_TO_FRONT['characters'].remove(flask.request.sid)
-        except ValueError:
-            # No existe en la lista
-            pass
+        asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
         emit(c.SERVER_LEVEL,
              json.dumps(c.DATA_TO_FRONT, indent=4),
              broadcast=True)
@@ -105,11 +111,14 @@ def userStart(jsonMsg):
     # Aqui no importa si son dos o mas jugadores
     try:
         msg = flask.request.sid
-        asyncio.run(sendMessage(msg='Hola desde Python'))
+        # Aqui es en el unico momento donde nos funciona esto ya que todo
+        # lo de mas va en waitMoments ahi es donde se encuenran la mayoria
+        # de mis emit
         if len(msg) >= 0:
             # Aqui ejecutamos la funcion
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             c.DATA_TO_FRONT['level'] = 1
+            asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
             emit(c.SERVER_LEVEL,
                  json.dumps(c.DATA_TO_FRONT, indent=4),
                  broadcast=True)
@@ -133,7 +142,11 @@ def userUnirme(jsonMsg):
             # Aqui ejecutamos la funcion
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+            # TODO
+            # [] Poner seguro para que no me deje agregar varios user
+            # ya que en la app pasada me fiaba en front en poner ese seguro
             c.DATA_TO_FRONT['players'].append(ID)
+            asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
             emit(c.SERVER_LEVEL,
                  json.dumps(c.DATA_TO_FRONT, indent=4),
                  broadcast=True)
@@ -206,12 +219,6 @@ def userSeleccion(jsonMsg):
                                                           players)
                 # Actualizamos la data main de info_sesion.csv
                 update_data.update_info_jugador()
-                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                c.DATA_TO_FRONT['characters'] = personajesArray.get()
-                emit(c.SERVER_LEVEL,
-                     json.dumps(c.DATA_TO_FRONT, indent=4),
-                     broadcast=True)
                 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
                 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -436,11 +443,7 @@ def change_player_to_user(jsonMsg):
             except ValueError:
                 # No existe en la lista
                 pass
-            try:
-                c.DATA_TO_FRONT['characters'].remove(msg['ID'])
-            except ValueError:
-                # No existe en la lista
-                pass
+            asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
             emit(c.SERVER_LEVEL,
                  json.dumps(c.DATA_TO_FRONT, indent=4),
                  broadcast=True)
@@ -464,6 +467,7 @@ def resetAll(jsonMsg):
         msg = json.loads(jsonMsg)
         if len(msg['ID']) >= 0:
             reset.resetSesion()
+            asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
             emit(c.SERVER_LEVEL,
                  json.dumps(c.DATA_TO_FRONT, indent=4),
                  broadcast=True)
@@ -488,10 +492,20 @@ async def handler(websocket):
     CLIENTS.add(websocket)
     async for message in websocket:
         try:
-            # await websocket.send(json.dumps({'statusCode': 200}))
-            await broadcast(json.dumps({'starusCode': 200,
-                                        'body': json.dumps(c.DATA_TO_FRONT)}))
-            print('\n Estoy en el Handler: {} - Type: {} \n'.format(message, type(message)))
+            # TODO
+            # [] Manejar los mensajes de Touch para cambiar de nivel
+            if message == 'lastFrame':
+                print('Hay que cambiar al siguiente nivel por que Touch lo dice')
+                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                c.DATA_TO_FRONT['level'] = 2
+                await broadcast(json.dumps({'starusCode': 200,
+                                            'body': json.dumps(c.DATA_TO_FRONT)}))
+                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+            else:
+                # await websocket.send(json.dumps({'statusCode': 200}))
+                await broadcast(json.dumps({'starusCode': 200,
+                                            'body': json.dumps(c.DATA_TO_FRONT)}))
+                print('\n Estoy en el Handler: {} - Type: {} \n'.format(message, type(message)))
             # print(c.DATA_TO_FRONT)
         except TypeError as error:
             await websocket.send(json.dumps({'statusCode': 400}))
@@ -511,34 +525,22 @@ async def broadcast(message):
             pass
 
 
-async def sendMessage(msg):
-    '''
-        [args : str]: [Puede ser cualquier cosa solo es el pretexto 
-                       para activar la funcion handler]
-    '''
-    # Estoy seguro que esto se puede mejorar y asi poder activar el handler
-    # de forma directa sin necesidad de hacer esto.
-    # Se me ocurre probar con Queue
-    async with websockets.connect('ws://localhost:8765') as websocket:
-        await websocket.send(msg)
-        await websocket.recv()
-
-
 async def execute_WebSocket():
     print('Inciando WebSocket')
     async with serve(handler, "localhost", 8765):
         await asyncio.Future()  # run forever
 
 
-async def main(task=2):
+async def main(task=3):
     # async with serve(handler, "localhost", 8765):
     #     await asyncio.Future()  # run forever
     global _shutdown
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
         loop = asyncio.get_running_loop()
         futures = [
             await loop.run_in_executor(pool, execute_WebSocket),
             loop.run_in_executor(pool, runSocketIO)
+            # loop.run_in_executor(pool, watcher.run)
         ]
         try:
             results = await asyncio.gather(*futures, return_exceptions=False)
@@ -553,3 +555,4 @@ async def main(task=2):
 
 if __name__ == '__main__':
     asyncio.run(main())
+    # watcher.run()

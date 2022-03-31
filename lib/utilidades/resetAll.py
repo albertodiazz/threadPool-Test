@@ -23,12 +23,11 @@ def resetSesion():
     resetGlobal = {
         'level': 0,
         'players': [],
-        'characters': ["", "", "", "",
-                       "", "", "", "",
-                       "", "", ""],
         'respuestas': '',
-        'respuestasCorrectas': False,
-        'respuestasFinales': []
+        'respuestaAcertada': False,
+        'respuestasSeleccionadas': [],
+        'posicionObstaculos': [],
+        'posicionRuta': 0
     }
     c.DATA_TO_FRONT = resetGlobal
     info_sesion = pd.read_csv(c.DIR_DATA+"info_sesion.csv", index_col=0)

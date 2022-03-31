@@ -36,12 +36,11 @@ MODO_DE_JUEGO = 'Multijugador'
 DATA_TO_FRONT = {
         'level': 0,
         'players': [],
-        'characters': ["", "", "", "",
-                       "", "", "", "",
-                       "", "", ""],
-        'respuestas': "",
-        'respuestasCorrectas': "false",
-        'respuestasFinales': []
+        'respuestas': '',
+        'respuestaAcertada': False,
+        'respuestasSeleccionadas': [],
+        'posicionObstaculos': [],
+        'posicionRuta': 0
 }
 '''
 ..............................
