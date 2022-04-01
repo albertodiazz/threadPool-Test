@@ -72,7 +72,7 @@ def add_respuestas(nivel_name, respuestas, mode='Momentos'):
                                 contener los atributos:
                                 respuestas].
                                 Defaults to 'Momentos'.
-                                'Retos'
+                                'Obstaculos'
     """
     open_json = open(c.DIR_DATA+"to_front.json")
     confirmaciones = json.load(open_json)

@@ -14,6 +14,8 @@ def change_to_player(_ID_):
             player.at[_ID_, 'TipoDeUsuario'] = 'player'
             player.to_csv(c.DIR_DATA+'info_sesion.csv')
 
+            c.DATA_TO_FRONT['players'].append(_ID_) 
+
             return {'response': 'Se cambio a player'}
         else:
             return {'response': 'Ya es un player'}

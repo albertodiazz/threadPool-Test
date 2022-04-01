@@ -23,6 +23,7 @@ from lib import updateModoDeJuego
 from lib import personajesArray
 from lib import webSocketMessage 
 from lib import watcher 
+from lib import obstaculos 
 from lib import CORS
 
 app = Flask(__name__, template_folder=c.DIR_INDEX)
@@ -30,6 +31,7 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode=c.ASYNC_MODE)
 CORS(app)
 
 work_queue = queue.Queue()
+WATCHERSTATE = False
 CLIENTS = set()
 
 
@@ -54,15 +56,16 @@ else:
 
 @socketio.on('connect')
 def connect(evento):
-    # Aqui no importa si son dos o mas jugadores
     try:
         # TODO
-        # [] Se esta incializando varias veces hay que arreglar eso
-        _watcher_= threading.Thread(target=copy_current_request_context(watcher.run)) # noqa
-        if _watcher_.is_alive():
+        # [x] Se esta incializando varias veces hay que arreglar eso
+        global WATCHERSTATE
+        if WATCHERSTATE: 
             print('WATCHER is running')
         else:
+            _watcher_= threading.Thread(target=copy_current_request_context(watcher.run)) # noqa
             _watcher_.start()
+            WATCHERSTATE = _watcher_.is_alive() 
         # Comprobamos conexiones de clientes
         app.logger.info('connect: ',
                         'Alguien se conecto al servidor: ',
@@ -70,10 +73,10 @@ def connect(evento):
         # Creamos jugador por sesion con el atributo user
         # en unirse se lo cambiamos a player
         funcionesJugador.create_player(flask.request.sid)
-        asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
-        emit(c.SERVER_LEVEL,
-             json.dumps(c.DATA_TO_FRONT, indent=4),
-             broadcast=True)
+        # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
+        # emit(c.SERVER_LEVEL,
+        #      json.dumps(c.DATA_TO_FRONT, indent=4),
+        #      broadcast=True)
     except TypeError:
         app.logger.info('No hay conexion con el servidor')
         return
@@ -92,10 +95,10 @@ def on_disconnect():
         except ValueError:
             # No existe en la lista
             pass
-        asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
-        emit(c.SERVER_LEVEL,
-             json.dumps(c.DATA_TO_FRONT, indent=4),
-             broadcast=True)
+        # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
+        # emit(c.SERVER_LEVEL,
+        #      json.dumps(c.DATA_TO_FRONT, indent=4),
+        #      broadcast=True)
         # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
         # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     except TypeError:
@@ -118,10 +121,10 @@ def userStart(jsonMsg):
             # Aqui ejecutamos la funcion
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             c.DATA_TO_FRONT['level'] = 1
-            asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
-            emit(c.SERVER_LEVEL,
-                 json.dumps(c.DATA_TO_FRONT, indent=4),
-                 broadcast=True)
+            # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
+            # emit(c.SERVER_LEVEL,
+            #      json.dumps(c.DATA_TO_FRONT, indent=4),
+            #      broadcast=True)
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             app.logger.info({'userStart': {'ID': msg}})
         else:
@@ -139,17 +142,24 @@ def userUnirme(jsonMsg):
     try:
         ID = flask.request.sid
         if len(ID) >= 0:
+            # Aquie es donde haemos la aleatoredad de los obstaculos
+            if c.THREADS_OBSTACULOS:
+                print('<<<<<<<< THREADS_OBSTACULOS is running >>>>>>>>>')
+            else:
+                print('<<<<<<<< THREADS_OBSTACULOS START >>>>>>>>>')
+                _obstaculos_ = threading.Thread(target=obstaculos.run)
+                _obstaculos_.start()
+                print('<<<<<<<< Wait Moments >>>>>>>>>')
+                # GLOBAL
+                c.THREADS_OBSTACULOS = True 
             # Aqui ejecutamos la funcion
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-            # TODO
-            # [] Poner seguro para que no me deje agregar varios user
-            # ya que en la app pasada me fiaba en front en poner ese seguro
-            c.DATA_TO_FRONT['players'].append(ID)
-            asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
-            emit(c.SERVER_LEVEL,
-                 json.dumps(c.DATA_TO_FRONT, indent=4),
-                 broadcast=True)
+            # c.DATA_TO_FRONT['players'].append(ID)
+            # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
+            # emit(c.SERVER_LEVEL,
+            #      json.dumps(c.DATA_TO_FRONT, indent=4),
+            #      broadcast=True)
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             changeTipo.change_to_player(ID)
@@ -291,7 +301,7 @@ def adelante_atras(jsonMsg):
 
         # NOTA [Importante, hay que cambiar el nivel4 por otro
         # en el caso que se mueva el orde]
-        if len(msg['type']) >= 0 and msg['name'] != 'nivel4':
+        if len(msg['type']) >= 0 and msg['name'] != 'nivel98':
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             handle_json.add_confirmaciones_automatic(nivel_name=msg['name'], # noqa
                                                      mode=msg['type'])
@@ -421,7 +431,7 @@ def popUp_confirmacion(jsonMsg):
         return
 
 
-@socketio.on('/player/changeStatus')
+@socketio.on('/player/abandonarJuego')
 def change_player_to_user(jsonMsg):
     """[Funcion en donde cambiamos al player to user
         esto significa que pasara de ser un jugador a un
@@ -443,10 +453,10 @@ def change_player_to_user(jsonMsg):
             except ValueError:
                 # No existe en la lista
                 pass
-            asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
-            emit(c.SERVER_LEVEL,
-                 json.dumps(c.DATA_TO_FRONT, indent=4),
-                 broadcast=True)
+            # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
+            # emit(c.SERVER_LEVEL,
+            #      json.dumps(c.DATA_TO_FRONT, indent=4),
+            #      broadcast=True)
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -467,10 +477,10 @@ def resetAll(jsonMsg):
         msg = json.loads(jsonMsg)
         if len(msg['ID']) >= 0:
             reset.resetSesion()
-            asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
-            emit(c.SERVER_LEVEL,
-                 json.dumps(c.DATA_TO_FRONT, indent=4),
-                 broadcast=True)
+            # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
+            # emit(c.SERVER_LEVEL,
+            #      json.dumps(c.DATA_TO_FRONT, indent=4),
+            #      broadcast=True)
             app.logger.info({'userStart': {'ID': msg['ID']}})
         else:
             raise SocketIOEventos({
@@ -492,8 +502,6 @@ async def handler(websocket):
     CLIENTS.add(websocket)
     async for message in websocket:
         try:
-            # TODO
-            # [] Manejar los mensajes de Touch para cambiar de nivel
             if message == 'lastFrame':
                 print('Hay que cambiar al siguiente nivel por que Touch lo dice')
                 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

@@ -4,7 +4,7 @@ from lib.utilidades import handle_json
 
 
 def resetSesion():
-    """[Funcion para resetear el csv de Personajes]
+    """[Funcion para resetear todo]
 
     Returns:
         [dict]: [response: Data borrada]
@@ -17,6 +17,7 @@ def resetSesion():
     handle_json.reset()
     # Aqui reseteamos queue y thread
     c.THREADS_CRONOMETRO = False
+    c.THREADS_OBSTACULOS = False
     c.CRONOMETRO = 'STOP'
     # work_queue.get()
 

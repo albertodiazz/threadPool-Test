@@ -29,6 +29,7 @@ from lib.utilidades import eventosJuego # noqa
 from lib.utilidades import personajesArray # noqa
 from lib.utilidades import webSocketMessage # noqa
 from lib.utilidades import watcher # noqa
+from lib.utilidades import obstaculos # noqa
 
 # El modulo de cronometro lo estoy corriendo de
 # manera paralela con threading en app.py
