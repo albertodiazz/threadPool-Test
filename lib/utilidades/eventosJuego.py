@@ -13,6 +13,9 @@ def obstaculos_nivel(nivel,
         [nivelPrevio] ([str]) : [Nivel anterior para comenzar los obstaculos] 
         [nivelFinal] ([str]) : [Nivel posterior para comenzar los obstaculos] 
     '''
+    # TODO: BUG
+    # [] El atras esta mal no corresponde al nivel que deberia ser hay que arreglar eso
+    # cuando tengamos un interactivo en que podamos regresar el nivel
 
     if len(c.DATA_TO_FRONT['posicionObstaculos']) > 0:
         obstaculos = [
@@ -43,18 +46,26 @@ def obstaculos_nivel(nivel,
             'nivel9': 6,
             'nivel10': 10
         }
-        getIndexActual = obstaculos.index('obstaculo'+str(nivelS[str(nivel)]))
-        c.DATA_TO_FRONT['posicionRuta'] = getIndexActual + 1
-        try:
-            Atras = obstaculos[getIndexActual-1] if getIndexActual != 0 else nivelPrevio 
-            Adelante = obstaculos[getIndexActual+1]
-            # print('{} -- Obstaculo{} -- Atras: {} -- Adelante: {}'.format(nivel, nivelS[str(nivel)], Atras, Adelante))
-            return {'atras':Atras, 'adelante': Adelante}
-        except IndexError:
-            Atras = obstaculos[getIndexActual-1]
-            Adelante = nivelFinal
-            # print('{} -- Obstaculo{} -- Atras: {} -- Adelante: {}'.format(nivel, nivelS[str(nivel)], Atras, Adelante))
-            return {'atras':Atras, 'adelante': Adelante}
+        if nivel != 'nivel'+str(nivelPrevio):
+            getIndexActual = obstaculos.index('obstaculo'+str(nivelS[str(nivel)]))
+            if c.DATA_TO_FRONT['posicionRuta'] < len(c.DATA_TO_FRONT['posicionObstaculos']):
+                c.DATA_TO_FRONT['posicionRuta'] += 1
+            try:
+                Atras = nivelStart[obstaculos[getIndexActual-1]] if getIndexActual != 0 else nivelPrevio 
+                Adelante = nivelStart[obstaculos[getIndexActual+1]]
+                # print('{} -- Obstaculo{} -- Atras: {} -- Adelante: {}'.format(nivel, nivelS[str(nivel)], Atras, Adelante))
+                return {'atras':Atras, 'adelante': Adelante}
+            except IndexError:
+                Atras = nivelStart[obstaculos[getIndexActual-1]]
+                Adelante = nivelFinal
+                # print('{} -- Obstaculo{} -- Atras: {} -- Adelante: {}'.format(nivel, nivelS[str(nivel)], Atras, Adelante))
+                return {'atras':Atras, 'adelante': Adelante}
+        else:   
+            # Aqui lo mandamos a llamar cuando estamos en nivel3 se supone que despues
+            # de ese nivel empiezan los obstaculos
+            c.DATA_TO_FRONT['posicionRuta'] = 1
+            Adelante = nivelStart[obstaculos[0]]
+            return {'atras':2, 'adelante': Adelante}
 
 
 def reto_nivel_check(levelFromFront, 
@@ -102,4 +113,6 @@ def reto_nivel_check(levelFromFront,
             'atras': nivelAtras,
             'adelante': nivelAdelante 
         }
+    print(posiciones)
+    # print(c.DATA_TO_FRONT['posicionRuta'])
     return posiciones

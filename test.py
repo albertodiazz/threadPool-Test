@@ -4,7 +4,7 @@ from lib import c
 
 
 def cambioNivelesObstaculos():
-    for i in range(500):
+    for i in range(5):
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
         obstaculos.run()
         print(c.DATA_TO_FRONT['posicionObstaculos'])
@@ -26,9 +26,12 @@ def cambioNivelesObstaculos():
             'nivel10': 10
         }
 
-        for levels in range(len(c.DATA_TO_FRONT['posicionObstaculos'])):
-            getObstaculos = 'obstaculo'+ str(c.DATA_TO_FRONT['posicionObstaculos'][levels])
-            posicion = eventosJuego.reto_nivel_check('nivel'+str(nivelStart[getObstaculos]))
+        for levels in range(len(c.DATA_TO_FRONT['posicionObstaculos'])+1):
+            if levels < 1:
+                posicion = eventosJuego.reto_nivel_check('nivel3')
+            else:
+                getObstaculos = 'obstaculo'+ str(c.DATA_TO_FRONT['posicionObstaculos'][levels-1])
+                posicion = eventosJuego.reto_nivel_check('nivel'+str(nivelStart[getObstaculos]))
             # print('Obs: {} Obs: {}'.format(getObstaculos, nivelS['nivel'+str(posicion['adelante'])]))
  
 
