@@ -57,8 +57,6 @@ else:
 @socketio.on('connect')
 def connect(evento):
     try:
-        # TODO
-        # [x] Se esta incializando varias veces hay que arreglar eso
         global WATCHERSTATE
         if WATCHERSTATE: 
             print('WATCHER is running')
