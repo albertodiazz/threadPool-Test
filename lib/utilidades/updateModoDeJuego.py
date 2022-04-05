@@ -6,11 +6,12 @@ def update():
     numJ = numeroJugadores.get_players()
 
     try:
-        if len(numJ.index) < 2:
+        if len(numJ.index) < c.MIN_JUGADORES:
             c.MODO_DE_JUEGO = 'Solo'
             print('<<<<<<<<<<<<<<<<<<<<<<<<',
-                ' Solo ',
+                ' No llego al minimo de Jugadores',
                 '>>>>>>>>>>>>>>>>>>>>>>>>')
+            reset.resetSesion()
         else:
             c.MODO_DE_JUEGO = 'Multijugador'
             print('<<<<<<<<<<<<<<<<<<<<<<<<',

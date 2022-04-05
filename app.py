@@ -71,6 +71,7 @@ def connect(evento):
         # Creamos jugador por sesion con el atributo user
         # en unirse se lo cambiamos a player
         funcionesJugador.create_player(flask.request.sid)
+        c.DATA_TO_FRONT['update'] += 1 
         # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
         # emit(c.SERVER_LEVEL,
         #      json.dumps(c.DATA_TO_FRONT, indent=4),
@@ -153,7 +154,7 @@ def userUnirme(jsonMsg):
             # Aqui ejecutamos la funcion
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-            # c.DATA_TO_FRONT['players'].append(ID)
+            c.DATA_TO_FRONT['update'] += 1 
             # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
             # emit(c.SERVER_LEVEL,
             #      json.dumps(c.DATA_TO_FRONT, indent=4),
@@ -290,69 +291,75 @@ def adelante_atras(jsonMsg):
     try:
         msg = json.loads(jsonMsg)
 
-        print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',
-            'Estamos en nivel cambiar',
-            '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',
-            c.THREADS_CRONOMETRO,
-            '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',
-            msg)
+        try:
+            c.SEGURO_INTERACCIONES.index(flask.request.sid)
+            
+        except ValueError: 
+            c.SEGURO_INTERACCIONES.append(flask.request.sid)
 
-        # NOTA [Importante, hay que cambiar el nivel4 por otro
-        # en el caso que se mueva el orde]
-        if len(msg['type']) >= 0 and msg['name'] != 'nivel98':
-            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-            handle_json.add_confirmaciones_automatic(nivel_name=msg['name'], # noqa
-                                                     mode=msg['type'])
+            print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',
+                'Estamos en nivel cambiar',
+                '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',
+                c.THREADS_CRONOMETRO,
+                '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',
+                msg)
 
-            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-            if c.THREADS_CRONOMETRO:
-                # Revizamos que no este corriendo el Thread
-                print('<<<<<<<<<<<<<<<<< ',
-                      'Wait Event is running', ' >>>>>>>>>')
+            # NOTA [Importante, hay que cambiar el nivel4 por otro
+            # en el caso que se mueva el orde]
+            if len(msg['type']) >= 0 and msg['name'] != 'nivel98':
+                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                handle_json.add_confirmaciones_automatic(nivel_name=msg['name'], # noqa
+                                                         mode=msg['type'])
+
+                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                if c.THREADS_CRONOMETRO:
+                    # Revizamos que no este corriendo el Thread
+                    print('<<<<<<<<<<<<<<<<< ',
+                          'Wait Event is running', ' >>>>>>>>>')
+                else:
+                    print('<<<<<<<< Wait Moments >>>>>>>>>')
+                    # [Aqui hacemos la logica de comparacion de respuestas
+                    # y logica de preguntas iguales y asi]
+                    _waitMoments_ = threading.Thread(target=copy_current_request_context(waitMoments.wait_momentos_retos), # noqa
+                                                     args=(msg['name'],
+                                                           msg['type'],
+                                                           msg['cambioNivel']))
+                    _waitMoments_.start()
+                    # GLOBAL
+                    c.THREADS_CRONOMETRO = _waitMoments_.is_alive()
             else:
-                print('<<<<<<<< Wait Moments >>>>>>>>>')
-                # [Aqui hacemos la logica de comparacion de respuestas
-                # y logica de preguntas iguales y asi]
-                _waitMoments_ = threading.Thread(target=copy_current_request_context(waitMoments.wait_momentos_retos), # noqa
-                                                 args=(msg['name'],
-                                                       msg['type'],
-                                                       msg['cambioNivel']))
-                _waitMoments_.start()
-                # GLOBAL
-                c.THREADS_CRONOMETRO = _waitMoments_.is_alive()
-        else:
-            # BUG [el pop up no aparece cuando contestan diferente]
-            # [Estamos en un momento especial, el nivel4, que tiene como
-            # atributo poder ir de adelante atras]
-            print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>',
-                  'Estamos en un momento especial de la App',
-                  '<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
-                  msg)
-            handle_json.add_confirmaciones_automatic(nivel_name=msg['name'],
-                                                     mode=msg['type'])
-            try:
-                # Con msg['respuesta'] levantamos la excepcion
-                print(msg['respuesta'])
-                handle_json.add_respuestas(nivel_name=msg['name'],
-                                           respuestas=msg['respuesta'],
-                                           mode=msg['type'])
-            except KeyError:
-                '''El valor ['respueta'] no esta presente en el JSON'''
-                pass
+                # BUG [el pop up no aparece cuando contestan diferente]
+                # [Estamos en un momento especial, el nivel4, que tiene como
+                # atributo poder ir de adelante atras]
+                print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>',
+                      'Estamos en un momento especial de la App',
+                      '<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                      msg)
+                handle_json.add_confirmaciones_automatic(nivel_name=msg['name'],
+                                                         mode=msg['type'])
+                try:
+                    # Con msg['respuesta'] levantamos la excepcion
+                    print(msg['respuesta'])
+                    handle_json.add_respuestas(nivel_name=msg['name'],
+                                               respuestas=msg['respuesta'],
+                                               mode=msg['type'])
+                except KeyError:
+                    '''El valor ['respueta'] no esta presente en el JSON'''
+                    pass
 
-            if c.THREADS_CRONOMETRO:
-                # Revizamos que no este corriendo el Thread
-                print('<<<<<<<<<<<<<<<<< ',
-                      'Wait Event is running', ' >>>>>>>>>')
-            else:
-                print('<<<<<<<< Wait Moments >>>>>>>>>')
-                _waitMoments_ = threading.Thread(target=copy_current_request_context(waitMoments.wait_momentos_retos), # noqa
-                                                 args=(msg['name'],
-                                                       msg['type'],
-                                                       msg['cambioNivel']))
-                _waitMoments_.start()
-                # GLOBAL
-                c.THREADS_CRONOMETRO = _waitMoments_.is_alive()
+                if c.THREADS_CRONOMETRO:
+                    # Revizamos que no este corriendo el Thread
+                    print('<<<<<<<<<<<<<<<<< ',
+                          'Wait Event is running', ' >>>>>>>>>')
+                else:
+                    print('<<<<<<<< Wait Moments >>>>>>>>>')
+                    _waitMoments_ = threading.Thread(target=copy_current_request_context(waitMoments.wait_momentos_retos), # noqa
+                                                     args=(msg['name'],
+                                                           msg['type'],
+                                                           msg['cambioNivel']))
+                    _waitMoments_.start()
+                    # GLOBAL
+                    c.THREADS_CRONOMETRO = _waitMoments_.is_alive()
 
     except TypeError:
         return
@@ -362,35 +369,41 @@ def adelante_atras(jsonMsg):
 @socketio.on('/sesion/exit')
 def nivel_final(jsonMsg):
     try:
-        msg = json.loads(jsonMsg)
-        if len(msg['type']) >= 0:
-            ''' Aqui ejecutamos la funcion '''
-            _cronometro_ = threading.Thread(target=cronometro.temporizador,
-                                            args=(c.TIME_SECONDS,
-                                                  work_queue))
-            handle_json.add_confirmaciones_automatic(nivel_name=msg['name'],
-                                                     mode=msg['type'])
-            # GLOBAL
-            if c.THREADS_CRONOMETRO:
-                # Revizamos que no este corriendo el Thread
-                print('<<<<<<<<<<<<<<<<< ',
-                      'Cronometro is running', ' >>>>>>>>>')
-            else:
-                _cronometro_.start()
-                print('<<<<<<<< Wait Moments >>>>>>>>>')
-                _waitMoments_ = threading.Thread(target=copy_current_request_context(waitMoments.wait_exit_sesion), # noqa
-                                                 args=(msg['name'],
-                                                       msg['type'],))
+        try:
+            c.SEGURO_INTERACCIONES.index(flask.request.sid)
+            
+        except ValueError: 
+            c.SEGURO_INTERACCIONES.append(flask.request.sid)
+
+            msg = json.loads(jsonMsg)
+            if len(msg['type']) >= 0:
+                ''' Aqui ejecutamos la funcion '''
+                _cronometro_ = threading.Thread(target=cronometro.temporizador,
+                                                args=(c.TIME_SECONDS,
+                                                      work_queue))
+                handle_json.add_confirmaciones_automatic(nivel_name=msg['name'],
+                                                         mode=msg['type'])
                 # GLOBAL
-                c.THREADS_CRONOMETRO = _cronometro_.is_alive()
-                _waitMoments_.start()
-                print('<<<<<<<<<<<<<<<<< ',
-                      'Start Cronometro / Wait Moments: ',
-                      c.THREADS_CRONOMETRO, ' >>>>>>>>>>>>>')
-        else:
-            raise SocketIOEventos({
-                'userSeleccion': 'no recivimos el ID del participante'
-                })
+                if c.THREADS_CRONOMETRO:
+                    # Revizamos que no este corriendo el Thread
+                    print('<<<<<<<<<<<<<<<<< ',
+                          'Cronometro is running', ' >>>>>>>>>')
+                else:
+                    _cronometro_.start()
+                    print('<<<<<<<< Wait Moments >>>>>>>>>')
+                    _waitMoments_ = threading.Thread(target=copy_current_request_context(waitMoments.wait_exit_sesion), # noqa
+                                                     args=(msg['name'],
+                                                           msg['type'],))
+                    # GLOBAL
+                    c.THREADS_CRONOMETRO = _cronometro_.is_alive()
+                    _waitMoments_.start()
+                    print('<<<<<<<<<<<<<<<<< ',
+                          'Start Cronometro / Wait Moments: ',
+                          c.THREADS_CRONOMETRO, ' >>>>>>>>>>>>>')
+            else:
+                raise SocketIOEventos({
+                    'userSeleccion': 'no recivimos el ID del participante'
+                    })
     except TypeError:
         return
 
@@ -452,9 +465,9 @@ def change_player_to_user(jsonMsg):
                 # No existe en la lista
                 pass
             # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
-            # emit(c.SERVER_LEVEL,
-            #      json.dumps(c.DATA_TO_FRONT, indent=4),
-            #      broadcast=True)
+            emit(c.SERVER_LEVEL,
+                 json.dumps(c.DATA_TO_FRONT, indent=4),
+                 broadcast=True)
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -498,6 +511,10 @@ def runSocketIO():
 
 async def handler(websocket):
     CLIENTS.add(websocket)
+    print('\n Alguien se conecto \n')
+    # c.DATA_TO_FRONT['update'] += 1 
+    await websocket.send(json.dumps({'starusCode': 200,
+                                     'body': json.dumps(c.DATA_TO_FRONT)}))
     async for message in websocket:
         try:
             if message == 'lastFrame':

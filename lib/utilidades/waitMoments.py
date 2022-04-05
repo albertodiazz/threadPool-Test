@@ -50,6 +50,9 @@ def wait_join_players(whichLevel=3):
             if len(clean) > 0:
                 joinAlll = clean.loc[clean.values == 'player']
                 # Lo revizamos cada segundo un vez que fue llamado
+                emit(c.SERVER_TIME,
+                     json.dumps(c.TIEMPO_GLOBAL, indent=4),
+                     broadcast=True)
                 time.sleep(1)
                 if len(joinAlll) >= c.MAX_JUGADORES:
                     print('<<<<<<<<<<<<<<<<<<<<<<<<',
@@ -62,6 +65,9 @@ def wait_join_players(whichLevel=3):
                     # Cambiamos de nivel
                     ##############################
                     c.DATA_TO_FRONT['level'] = whichLevel
+                    c.DATA_TO_FRONT['respuestas'] = ''
+                    c.DATA_TO_FRONT['respuestaAcertada'] = 'false'
+                    c.SEGURO_INTERACCIONES = []
                     # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
                     # emit(c.SERVER_LEVEL,
                     #      json.dumps(c.DATA_TO_FRONT, indent=4),
@@ -76,6 +82,12 @@ def wait_join_players(whichLevel=3):
                 # Cambiamos de nivel
                 ##############################
                 c.DATA_TO_FRONT['level'] = whichLevel
+                c.DATA_TO_FRONT['respuestas'] = ''
+                c.DATA_TO_FRONT['respuestaAcertada'] = 'false'
+                c.SEGURO_INTERACCIONES = []
+                emit(c.SERVER_TIME,
+                     json.dumps(c.TIEMPO_GLOBAL, indent=4),
+                     broadcast=True)
                 # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
                 # emit(c.SERVER_LEVEL,
                 #      json.dumps(c.DATA_TO_FRONT, indent=4),
@@ -90,6 +102,9 @@ def wait_join_players(whichLevel=3):
                 # necesarios para iniciar la actividad
                 ##############################
                 c.DATA_TO_FRONT['level'] = 0 
+                c.DATA_TO_FRONT['respuestas'] = ''
+                c.DATA_TO_FRONT['respuestaAcertada'] = 'false'
+                c.SEGURO_INTERACCIONES = []
                 resetAll.resetSesion()
                 # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
                 # emit(c.SERVER_LEVEL,
@@ -135,6 +150,9 @@ def wait_confirmacion_characters(whichLevel=3):
                     # Cambiamos de nivel
                     ##############################
                     c.DATA_TO_FRONT['level'] = whichLevel
+                    c.DATA_TO_FRONT['respuestas'] = ''
+                    c.DATA_TO_FRONT['respuestaAcertada'] = 'false'
+                    c.SEGURO_INTERACCIONES = []
                     # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
                     # emit(c.SERVER_LEVEL,
                     #      json.dumps(c.DATA_TO_FRONT, indent=4),
@@ -159,6 +177,9 @@ def wait_confirmacion_characters(whichLevel=3):
                 # No existe en la lista
                 pass
             c.DATA_TO_FRONT['level'] = whichLevel
+            c.DATA_TO_FRONT['respuestas'] = ''
+            c.DATA_TO_FRONT['respuestaAcertada'] = 'false'
+            c.SEGURO_INTERACCIONES = []
             # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
             # emit(c.SERVER_LEVEL,
             #      json.dumps(c.DATA_TO_FRONT, indent=4),
@@ -326,8 +347,8 @@ def wait_momentos_retos(nivel_name,
     }
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    c.DATA_TO_FRONT['respuestas'] = ''
-    c.DATA_TO_FRONT['respuestaAcertada'] = 'false'
+    # c.DATA_TO_FRONT['respuestas'] = ''
+    # c.DATA_TO_FRONT['respuestaAcertada'] = 'false'
     # BUG : [Esto ocasiona un bug]
     # emit(c.SERVER_LEVEL,
     #      json.dumps(c.DATA_TO_FRONT, indent=4),
@@ -390,6 +411,9 @@ def wait_momentos_retos(nivel_name,
                             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
                             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
                             c.DATA_TO_FRONT['level'] = posicion[cambioNivel]
+                            c.DATA_TO_FRONT['respuestas'] = ''
+                            c.DATA_TO_FRONT['respuestaAcertada'] = 'false'
+                            c.SEGURO_INTERACCIONES = []
                             # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
                             # emit(c.SERVER_LEVEL,
                             #     json.dumps(c.DATA_TO_FRONT, indent=4),
@@ -480,6 +504,9 @@ def wait_momentos_retos(nivel_name,
                 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
                 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
                 c.DATA_TO_FRONT['level'] = posicion[cambioNivel]
+                c.DATA_TO_FRONT['respuestas'] = ''
+                c.DATA_TO_FRONT['respuestaAcertada'] = 'false'
+                c.SEGURO_INTERACCIONES = []
                 # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
                 # emit(c.SERVER_LEVEL,
                 #      json.dumps(c.DATA_TO_FRONT, indent=4),

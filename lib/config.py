@@ -36,6 +36,11 @@ TIEMPO_GLOBAL = {'minutos': 0, 'segundos': 0}
 # es necesario cambiarlo manual
 MODO_DE_JUEGO = 'Multijugador'
 ####################################
+# TODO
+# [] Hay que agregar un seguro para los momentos donde el
+# jugador solo pueda interactuar una vez
+SEGURO_INTERACCIONES = [] 
+####################################
 DATA_TO_FRONT = {
         'level': 0,
         'players': [],
@@ -43,7 +48,8 @@ DATA_TO_FRONT = {
         'respuestaAcertada': False,
         'respuestasSeleccionadas': [],
         'posicionObstaculos': [],
-        'posicionRuta': 0
+        'posicionRuta': 0,
+        'update': 0
 }
 '''
 ..............................

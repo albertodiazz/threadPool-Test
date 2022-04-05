@@ -81,7 +81,7 @@
         "nivel7":{
             "respuestas" : "",
             "confirmacion": 0,
-            "respuestaCorrecta": "5",
+            "respuestaCorrecta": "2",
             "resultados" : {
                 "estoContestaron": ""
             }
@@ -89,7 +89,7 @@
         "nivel8":{
             "respuestas" : "",
             "confirmacion": 0,
-            "respuestaCorrecta": "2",
+            "respuestaCorrecta": "3",
             "resultados" : {
                 "estoContestaron": ""
             }
@@ -97,7 +97,7 @@
         "nivel9":{
             "respuestas" : "",
             "confirmacion": 0,
-            "respuestaCorrecta": "2",
+            "respuestaCorrecta": "3",
             "resultados" : {
                 "estoContestaron": ""
             }

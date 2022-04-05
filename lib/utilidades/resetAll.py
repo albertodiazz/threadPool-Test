@@ -19,6 +19,7 @@ def resetSesion():
     c.THREADS_CRONOMETRO = False
     c.THREADS_OBSTACULOS = False
     c.CRONOMETRO = 'STOP'
+    c.SEGURO_INTERACCIONES = []
     # work_queue.get()
 
     resetGlobal = {
@@ -28,7 +29,8 @@ def resetSesion():
         'respuestaAcertada': False,
         'respuestasSeleccionadas': [],
         'posicionObstaculos': [],
-        'posicionRuta': 0
+        'posicionRuta': 0,
+        'update': 0
     }
     c.DATA_TO_FRONT = resetGlobal
     info_sesion = pd.read_csv(c.DIR_DATA+"info_sesion.csv", index_col=0)
