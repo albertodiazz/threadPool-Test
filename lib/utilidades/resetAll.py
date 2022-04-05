@@ -9,6 +9,7 @@ def resetSesion():
     Returns:
         [dict]: [response: Data borrada]
     """
+    print('\n Reset All \n')
     # NOTA: al realizar cambios en los atributos de Personajes.csv tienes
     # que revizar que sean los mismo a los de la classe
     # del jugador.
@@ -30,6 +31,7 @@ def resetSesion():
         'respuestasSeleccionadas': [],
         'posicionObstaculos': [],
         'posicionRuta': 0,
+        'segundos': 0,
         'update': 0
     }
     c.DATA_TO_FRONT = resetGlobal

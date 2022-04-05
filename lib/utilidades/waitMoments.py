@@ -50,6 +50,7 @@ def wait_join_players(whichLevel=3):
             if len(clean) > 0:
                 joinAlll = clean.loc[clean.values == 'player']
                 # Lo revizamos cada segundo un vez que fue llamado
+                c.DATA_TO_FRONT['segundos'] = c.TIEMPO_GLOBAL['segundos']
                 emit(c.SERVER_TIME,
                      json.dumps(c.TIEMPO_GLOBAL, indent=4),
                      broadcast=True)

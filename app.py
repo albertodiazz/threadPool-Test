@@ -34,6 +34,10 @@ work_queue = queue.Queue()
 WATCHERSTATE = False
 CLIENTS = set()
 
+# TODO
+# [] Esto me causa un pedo si no lo logras resolver preguntale a misa si puede apuntar
+# al reset cada que se levantem node
+# reset.resetSesion()
 
 class SocketIOEventos(Exception):
     pass
@@ -524,6 +528,10 @@ async def handler(websocket):
                 await broadcast(json.dumps({'starusCode': 200,
                                             'body': json.dumps(c.DATA_TO_FRONT)}))
                 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+            elif c.DATA_TO_FRONT['level'] == 2:
+                # Solo en este momento compartimos cronometro con Touch
+                await broadcast(json.dumps({'starusCode': 200,
+                                            'body': json.dumps(c.DATA_TO_FRONT)}))
             else:
                 # await websocket.send(json.dumps({'statusCode': 200}))
                 await broadcast(json.dumps({'starusCode': 200,
@@ -557,13 +565,15 @@ async def execute_WebSocket():
 async def main(task=3):
     # async with serve(handler, "localhost", 8765):
     #     await asyncio.Future()  # run forever
+    # TODO
+    # [] Hay que revizar que el resetSesion en este punto no me cause problemas
     global _shutdown
     with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
         loop = asyncio.get_running_loop()
         futures = [
             await loop.run_in_executor(pool, execute_WebSocket),
-            loop.run_in_executor(pool, runSocketIO)
-            # loop.run_in_executor(pool, watcher.run)
+            loop.run_in_executor(pool, runSocketIO),
+            loop.run_in_executor(pool, reset.resetSesion)
         ]
         try:
             results = await asyncio.gather(*futures, return_exceptions=False)
