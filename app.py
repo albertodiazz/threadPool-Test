@@ -68,6 +68,7 @@ def connect(evento):
             _watcher_= threading.Thread(target=copy_current_request_context(watcher.run)) # noqa
             _watcher_.start()
             WATCHERSTATE = _watcher_.is_alive() 
+
         # Comprobamos conexiones de clientes
         app.logger.info('connect: ',
                         'Alguien se conecto al servidor: ',
@@ -76,10 +77,10 @@ def connect(evento):
         # en unirse se lo cambiamos a player
         funcionesJugador.create_player(flask.request.sid)
         c.DATA_TO_FRONT['update'] += 1 
-        # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
-        # emit(c.SERVER_LEVEL,
-        #      json.dumps(c.DATA_TO_FRONT, indent=4),
-        #      broadcast=True)
+        asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
+        emit(c.SERVER_LEVEL,
+             json.dumps(c.DATA_TO_FRONT, indent=4),
+             broadcast=True)
     except TypeError:
         app.logger.info('No hay conexion con el servidor')
         return
@@ -98,10 +99,10 @@ def on_disconnect():
         except ValueError:
             # No existe en la lista
             pass
-        # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
-        # emit(c.SERVER_LEVEL,
-        #      json.dumps(c.DATA_TO_FRONT, indent=4),
-        #      broadcast=True)
+        asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
+        emit(c.SERVER_LEVEL,
+             json.dumps(c.DATA_TO_FRONT, indent=4),
+             broadcast=True)
         # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
         # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     except TypeError:
@@ -124,10 +125,10 @@ def userStart(jsonMsg):
             # Aqui ejecutamos la funcion
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             c.DATA_TO_FRONT['level'] = 1
-            # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
-            # emit(c.SERVER_LEVEL,
-            #      json.dumps(c.DATA_TO_FRONT, indent=4),
-            #      broadcast=True)
+            asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
+            emit(c.SERVER_LEVEL,
+                 json.dumps(c.DATA_TO_FRONT, indent=4),
+                 broadcast=True)
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             app.logger.info({'userStart': {'ID': msg}})
         else:
@@ -158,14 +159,14 @@ def userUnirme(jsonMsg):
             # Aqui ejecutamos la funcion
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-            c.DATA_TO_FRONT['update'] += 1 
-            # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
-            # emit(c.SERVER_LEVEL,
-            #      json.dumps(c.DATA_TO_FRONT, indent=4),
-            #      broadcast=True)
-            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             changeTipo.change_to_player(ID)
+            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+            c.DATA_TO_FRONT['update'] += 1 
+            asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
+            emit(c.SERVER_LEVEL,
+                 json.dumps(c.DATA_TO_FRONT, indent=4),
+                 broadcast=True)
             ##########################################
             '''IMPORTANTE aqui revizamos el modo de juego
                una vez acabado el temporizador'''
@@ -468,7 +469,7 @@ def change_player_to_user(jsonMsg):
             except ValueError:
                 # No existe en la lista
                 pass
-            # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
+            asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
             emit(c.SERVER_LEVEL,
                  json.dumps(c.DATA_TO_FRONT, indent=4),
                  broadcast=True)
@@ -492,10 +493,10 @@ def resetAll(jsonMsg):
         msg = json.loads(jsonMsg)
         if len(msg['ID']) >= 0:
             reset.resetSesion()
-            # asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
-            # emit(c.SERVER_LEVEL,
-            #      json.dumps(c.DATA_TO_FRONT, indent=4),
-            #      broadcast=True)
+            asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
+            emit(c.SERVER_LEVEL,
+                 json.dumps(c.DATA_TO_FRONT, indent=4),
+                 broadcast=True)
             app.logger.info({'userStart': {'ID': msg['ID']}})
         else:
             raise SocketIOEventos({

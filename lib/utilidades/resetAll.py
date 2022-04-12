@@ -19,6 +19,7 @@ def resetSesion():
     # Aqui reseteamos queue y thread
     c.THREADS_CRONOMETRO = False
     c.THREADS_OBSTACULOS = False
+    c.THREADS_WAITMOMENTS = False
     c.CRONOMETRO = 'STOP'
     c.SEGURO_INTERACCIONES = []
     # work_queue.get()

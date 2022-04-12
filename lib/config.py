@@ -24,6 +24,7 @@ THREADS_CRONOMETRO = False
 # Con esto controlamos la ejecucion de nuestro scipt de
 # obstaculos
 THREADS_OBSTACULOS = False
+THREADS_WAITMOMENTS = False
 # Con esta variable sabemos cuando el cronometro esta en
 # STOP/PLAY. Esta variable la solemos utilizar en subfunciones
 # por ejemplo en waitMoments
