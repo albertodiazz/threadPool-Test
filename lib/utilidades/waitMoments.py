@@ -439,7 +439,7 @@ def wait_momentos_retos(nivel_name,
                             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
                             c.DATA_TO_FRONT['respuestaAcertada'] = 'true'
                             if nivel_name != nivel_especial:
-                                c.DATA_TO_FRONT['respuestasSeleccionadas'].append('true')
+                                c.DATA_TO_FRONT['respuestasSeleccionadas'].append(True)
                             asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
                             emit(c.SERVER_LEVEL,
                                  json.dumps(c.DATA_TO_FRONT, indent=4),
@@ -463,7 +463,7 @@ def wait_momentos_retos(nivel_name,
                             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
                             c.DATA_TO_FRONT['respuestaAcertada'] = 'false'
                             if nivel_name != nivel_especial:
-                                c.DATA_TO_FRONT['respuestasSeleccionadas'].append('false') # noqa
+                                c.DATA_TO_FRONT['respuestasSeleccionadas'].append(False) # noqa
                             asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
                             emit(c.SERVER_LEVEL,
                                  json.dumps(c.DATA_TO_FRONT, indent=4),
