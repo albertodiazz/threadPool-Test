@@ -28,7 +28,7 @@ def resetSesion():
         'level': 0,
         'players': [],
         'respuestas': '',
-        'respuestaAcertada': 'false',
+        'respuestaAcertada': False,
         'respuestasSeleccionadas': [],
         'posicionObstaculos': [],
         'posicionRuta': 0,
