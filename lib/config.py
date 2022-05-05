@@ -43,7 +43,7 @@ DATA_TO_FRONT = {
         'level': 0,
         'players': [],
         'respuestas': '',
-        'respuestaAcertada': False,
+        'respuestaAcertada': 'false',
         'respuestasSeleccionadas': [],
         'posicionObstaculos': [],
         'posicionRuta': 0,
