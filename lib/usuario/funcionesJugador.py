@@ -26,6 +26,9 @@ def create_player(ID):
     allData = pd.read_csv(c.DIR_DATA+'info_sesion.csv', index_col=0)
     players.append(Players.Jugadores())
     players[len(players)-1].newPlayer(ID)
+    # TODO : BUG
+    # [] Al desconectarse los jugadores sucede un error de que no esta
+    # comprobando la cantidad de jugadores que siguen en juego
     allData = allData.append([players[len(players)-1].Datos])
     numJugadores = len(allData.index)
     try:

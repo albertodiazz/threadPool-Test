@@ -9,6 +9,7 @@ from lib.utilidades import whoLeavesCharacters
 from lib.usuario import automaticElection
 from lib.usuario import update_data
 from lib.utilidades import handle_json
+from lib.utilidades import updateModoDeJuego 
 from lib.usuario import numeroJugadores
 from lib import np
 import time
@@ -363,159 +364,163 @@ def wait_momentos_retos(nivel_name,
         confirmaciones = json.load(open_json)
         num_Confir = confirmaciones[mode][nivel_name]['confirmacion']
 
+        updateModoDeJuego.update()
         # NOTA [en la funcion de confirmacion characters
         # solo ocupo al inicio el get_player, ya que al
         # cambiar el status de algun player a user el front
         # actualiza una varible global, en change status]
         players_sesion = numeroJugadores.get_players()
-        num_players = len(players_sesion.index)
+        try:
+            num_players = len(players_sesion.index)
 
-        # Lo revizamos cada segundo un vez que fue llamado
-        print(num_Confir)
-        time.sleep(1)
-        open_json.close()
+            # Lo revizamos cada segundo un vez que fue llamado
+            print(num_Confir)
+            time.sleep(1)
+            open_json.close()
 
-        nivel_especial = 'nivel98'
-        if num_Confir >= num_players:
-            print('<<<<<<<<<<<<<<<<<<<<<<<<',
-                  'Confirmaron todos los jugadores',
-                  '>>>>>>>>>>>>>>>>>>>>>>>>>')
-            if cambioNivel == 'No' or nivel_name == nivel_especial:
-                lista = confirmaciones[mode][nivel_name]['respuestas']
-                print(lista)
-                respuestaCorrecta = confirmaciones[mode][nivel_name]['respuestaCorrecta'] # noqa
-                if type(lista) == list:
-                    # Seleccionamos la respuesta del primero en el array
-                    # y lo comparamos con los demas
-                    if np.all(np.array(lista) == lista[0]):
-                        print('<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
-                              'TODOS CONTESTARON IGUAL',
-                              '>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
-                        # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                        # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                        if nivel_name != nivel_especial:
-                            c.DATA_TO_FRONT['respuestas'] = 'iguales'
-                            asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
-                            emit(c.SERVER_LEVEL,
-                                json.dumps(c.DATA_TO_FRONT, indent=4),
-                                broadcast=True)
+            nivel_especial = 'nivel98'
+            if num_Confir >= num_players:
+                print('<<<<<<<<<<<<<<<<<<<<<<<<',
+                      'Confirmaron todos los jugadores',
+                      '>>>>>>>>>>>>>>>>>>>>>>>>>')
+                if cambioNivel == 'No' or nivel_name == nivel_especial:
+                    lista = confirmaciones[mode][nivel_name]['respuestas']
+                    print(lista)
+                    respuestaCorrecta = confirmaciones[mode][nivel_name]['respuestaCorrecta'] # noqa
+                    if type(lista) == list:
+                        # Seleccionamos la respuesta del primero en el array
+                        # y lo comparamos con los demas
+                        if np.all(np.array(lista) == lista[0]):
+                            print('<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                  'TODOS CONTESTARON IGUAL',
+                                  '>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
                             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
                             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                            dataOut['respuestas'] = 'iguales'
-                            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                        if nivel_name == nivel_especial:
-                            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                            c.THREADS_CRONOMETRO = False
-                            dataOut['confirmaron'] = True
-                            handle_json.reset_confirmaciones(nivel_name, mode)
-                            posicion = eventosJuego.reto_nivel_check(nivel_name)
-                            print('Cambiamos el nivel a: ', posicion[cambioNivel])
-                            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                            c.DATA_TO_FRONT['level'] = posicion[cambioNivel]
-                            c.DATA_TO_FRONT['respuestas'] = ''
-                            c.DATA_TO_FRONT['respuestaAcertada'] = False 
-                            c.SEGURO_INTERACCIONES = []
-                            asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
-                            emit(c.SERVER_LEVEL,
-                                json.dumps(c.DATA_TO_FRONT, indent=4),
-                                broadcast=True)
-                            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-                        if np.all(np.array(lista) == respuestaCorrecta):
-                            print('<<<<<<<<<<<<<<<<<<<<<<<<<',
-                                  'TODAS SON CORRECTAS',
-                                  '>>>>>>>>>>>>>>>>>>>>>>>>>')
-                            ducplicados = [i for i in lista if lista.count(i) > 0] # noqa
-                            getRespuesta = list(set(ducplicados))
-                            confirmaciones[mode][nivel_name]['resultados']['estoContestaron'] = getRespuesta # noqa
-                            handle_json.only_save(confirmaciones)
-                            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                            c.THREADS_CRONOMETRO = False
-                            dataOut['respuestaCorrecta'] = 'true'
-                            handle_json.reset_confirmaciones(nivel_name, mode)
-                            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                            c.DATA_TO_FRONT['respuestaAcertada'] = True 
                             if nivel_name != nivel_especial:
-                                c.DATA_TO_FRONT['respuestasSeleccionadas'].append(True)
-                            asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
-                            emit(c.SERVER_LEVEL,
-                                 json.dumps(c.DATA_TO_FRONT, indent=4),
-                                 broadcast=True)
-                            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                            return dataOut
+                                c.DATA_TO_FRONT['respuestas'] = 'iguales'
+                                asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
+                                emit(c.SERVER_LEVEL,
+                                    json.dumps(c.DATA_TO_FRONT, indent=4),
+                                    broadcast=True)
+                                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                                dataOut['respuestas'] = 'iguales'
+                                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                            if nivel_name == nivel_especial:
+                                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                                c.THREADS_CRONOMETRO = False
+                                dataOut['confirmaron'] = True
+                                handle_json.reset_confirmaciones(nivel_name, mode)
+                                posicion = eventosJuego.reto_nivel_check(nivel_name)
+                                print('Cambiamos el nivel a: ', posicion[cambioNivel])
+                                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                                c.DATA_TO_FRONT['level'] = posicion[cambioNivel]
+                                c.DATA_TO_FRONT['respuestas'] = ''
+                                c.DATA_TO_FRONT['respuestaAcertada'] = False 
+                                c.SEGURO_INTERACCIONES = []
+                                asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
+                                emit(c.SERVER_LEVEL,
+                                    json.dumps(c.DATA_TO_FRONT, indent=4),
+                                    broadcast=True)
+                                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+                            if np.all(np.array(lista) == respuestaCorrecta):
+                                print('<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                      'TODAS SON CORRECTAS',
+                                      '>>>>>>>>>>>>>>>>>>>>>>>>>')
+                                ducplicados = [i for i in lista if lista.count(i) > 0] # noqa
+                                getRespuesta = list(set(ducplicados))
+                                confirmaciones[mode][nivel_name]['resultados']['estoContestaron'] = getRespuesta # noqa
+                                handle_json.only_save(confirmaciones)
+                                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                                c.THREADS_CRONOMETRO = False
+                                dataOut['respuestaCorrecta'] = 'true'
+                                handle_json.reset_confirmaciones(nivel_name, mode)
+                                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                                c.DATA_TO_FRONT['respuestaAcertada'] = True 
+                                if nivel_name != nivel_especial:
+                                    c.DATA_TO_FRONT['respuestasSeleccionadas'].append(True)
+                                asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
+                                emit(c.SERVER_LEVEL,
+                                     json.dumps(c.DATA_TO_FRONT, indent=4),
+                                     broadcast=True)
+                                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                                return dataOut
+                            else:
+                                print('<<<<<<<<<<<<<<<<<<<<<<<<<',
+                                      'TODAS SON INCORRECTAS',
+                                      '>>>>>>>>>>>>>>>>>>>>>>>>>')
+                                ducplicados = [i for i in lista if lista.count(i) > 0] # noqa
+                                getRespuesta = list(set(ducplicados))
+                                confirmaciones[mode][nivel_name]['resultados']['estoContestaron'] = getRespuesta # noqa
+                                handle_json.only_save(confirmaciones)
+                                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                                c.THREADS_CRONOMETRO = False
+                                dataOut['respuestaCorrecta'] = 'false'
+                                handle_json.reset_confirmaciones(nivel_name, mode)
+                                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                                c.DATA_TO_FRONT['respuestaAcertada'] = False 
+                                if nivel_name != nivel_especial:
+                                    c.DATA_TO_FRONT['respuestasSeleccionadas'].append(False) # noqa
+                                asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
+                                emit(c.SERVER_LEVEL,
+                                     json.dumps(c.DATA_TO_FRONT, indent=4),
+                                     broadcast=True)
+                                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                                return dataOut
                         else:
-                            print('<<<<<<<<<<<<<<<<<<<<<<<<<',
-                                  'TODAS SON INCORRECTAS',
-                                  '>>>>>>>>>>>>>>>>>>>>>>>>>')
-                            ducplicados = [i for i in lista if lista.count(i) > 0] # noqa
-                            getRespuesta = list(set(ducplicados))
-                            confirmaciones[mode][nivel_name]['resultados']['estoContestaron'] = getRespuesta # noqa
-                            handle_json.only_save(confirmaciones)
+                            print('<<<<<<<<<<<<<<<<<<',
+                                  'ALGUIEN CONTESTO DIFERENTE',
+                                  '>>>>>>>>>>>>>>>>>>')
                             # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                            c.THREADS_CRONOMETRO = False
-                            dataOut['respuestaCorrecta'] = 'false'
-                            handle_json.reset_confirmaciones(nivel_name, mode)
-                            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                            c.DATA_TO_FRONT['respuestaAcertada'] = False 
-                            if nivel_name != nivel_especial:
-                                c.DATA_TO_FRONT['respuestasSeleccionadas'].append(False) # noqa
+                            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                            c.DATA_TO_FRONT['respuestas'] = 'diferentes'
                             asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
                             emit(c.SERVER_LEVEL,
                                  json.dumps(c.DATA_TO_FRONT, indent=4),
                                  broadcast=True)
-                            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                            c.THREADS_CRONOMETRO = False
+                            dataOut['respuestas'] = 'diferentes'
+                            handle_json.reset_confirmaciones(nivel_name, mode)
+                            handle_json.reset_respuestas(nivel_name, mode)
                             return dataOut
-                    else:
-                        print('<<<<<<<<<<<<<<<<<<',
-                              'ALGUIEN CONTESTO DIFERENTE',
-                              '>>>>>>>>>>>>>>>>>>')
-                        # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                        # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                        c.DATA_TO_FRONT['respuestas'] = 'diferentes'
-                        asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
-                        emit(c.SERVER_LEVEL,
-                             json.dumps(c.DATA_TO_FRONT, indent=4),
-                             broadcast=True)
-                        # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                        # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                        c.THREADS_CRONOMETRO = False
-                        dataOut['respuestas'] = 'diferentes'
-                        handle_json.reset_confirmaciones(nivel_name, mode)
-                        handle_json.reset_respuestas(nivel_name, mode)
-                        return dataOut
-                        # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-            else:
-                # [Solo aqui cambiamos el nivel
-                # OJO estamos cambiando la estructura de respuesta
-                # de la funcion ya que en esta parte es en el unico lugar
-                # donde regresamos un booleano]
-                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                c.THREADS_CRONOMETRO = False
-                dataOut['confirmaron'] = True
-                handle_json.reset_confirmaciones(nivel_name, mode)
-                print('Es una peticion de confirmar no necesitamos',
-                      ' comparar respuestas')
-                posicion = eventosJuego.reto_nivel_check(nivel_name)
-                print('Cambiamos el nivel a: ', posicion[cambioNivel])
-                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                c.DATA_TO_FRONT['level'] = posicion[cambioNivel]
-                c.DATA_TO_FRONT['respuestas'] = ''
-                c.DATA_TO_FRONT['respuestaAcertada'] = False 
-                c.SEGURO_INTERACCIONES = []
-                asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
-                emit(c.SERVER_LEVEL,
-                     json.dumps(c.DATA_TO_FRONT, indent=4),
-                     broadcast=True)
-                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                return True
+                            # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                else:
+                    # [Solo aqui cambiamos el nivel
+                    # OJO estamos cambiando la estructura de respuesta
+                    # de la funcion ya que en esta parte es en el unico lugar
+                    # donde regresamos un booleano]
+                    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                    c.THREADS_CRONOMETRO = False
+                    dataOut['confirmaron'] = True
+                    handle_json.reset_confirmaciones(nivel_name, mode)
+                    print('Es una peticion de confirmar no necesitamos',
+                          ' comparar respuestas')
+                    posicion = eventosJuego.reto_nivel_check(nivel_name)
+                    print('Cambiamos el nivel a: ', posicion[cambioNivel])
+                    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                    c.DATA_TO_FRONT['level'] = posicion[cambioNivel]
+                    c.DATA_TO_FRONT['respuestas'] = ''
+                    c.DATA_TO_FRONT['respuestaAcertada'] = False 
+                    c.SEGURO_INTERACCIONES = []
+                    asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
+                    emit(c.SERVER_LEVEL,
+                         json.dumps(c.DATA_TO_FRONT, indent=4),
+                         broadcast=True)
+                    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                    return True
+        except TypeError: 
+            print('Ocurrio una esepcion en waitPopup')
 
 
 def wait_exit_sesion(nivel_name,

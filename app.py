@@ -90,6 +90,7 @@ def connect(evento):
 def on_disconnect():
     try:
         deletUser.delete(flask.request.sid)
+        updateModoDeJuego.update()
         print('\n', '<<<<<<<< Alguien se deconecto >>>>>>>')
         print(flask.request.sid)
         # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -134,7 +135,7 @@ def userStart(jsonMsg):
         else:
             raise SocketIOEventos({
                 'userStart': 'no recivimos el ID del participante'
-                })
+            })
     except TypeError:
         return
 
@@ -169,7 +170,7 @@ def userUnirme(jsonMsg):
                  broadcast=True)
             ##########################################
             '''IMPORTANTE aqui revizamos el modo de juego
-               una vez acabado el temporizador'''
+            una vez acabado el temporizador'''
             ##########################################
             # GLOBAL
             if c.THREADS_CRONOMETRO:
@@ -190,7 +191,7 @@ def userUnirme(jsonMsg):
         else:
             raise SocketIOEventos({
                 'userUnirme': 'no recivimos el ID del participante'
-                })
+            })
     except TypeError:
         return
 
@@ -244,7 +245,7 @@ def userSeleccion(jsonMsg):
         else:
             raise SocketIOEventos({
                 'userSeleccion': 'no recivimos el ID del participante'
-                })
+            })
     except TypeError:
         return
 
@@ -253,6 +254,7 @@ def userSeleccion(jsonMsg):
 def momentos_retos_confirmaciones(jsonMsg):
     try:
         msg = json.loads(jsonMsg)
+        updateModoDeJuego.update()
         if len(msg['type']) >= 0:
             # No nos importa cuantas veces lo llamen aqui ponemos
             # un append para el json y en back lo revizamos todo el tiempo
@@ -286,7 +288,7 @@ def momentos_retos_confirmaciones(jsonMsg):
         else:
             raise SocketIOEventos({
                 'Response': 'no enviaste nada'
-                })
+            })
     except TypeError:
         return
 
@@ -298,16 +300,16 @@ def adelante_atras(jsonMsg):
 
         try:
             c.SEGURO_INTERACCIONES.index(flask.request.sid)
-            
+
         except ValueError: 
             c.SEGURO_INTERACCIONES.append(flask.request.sid)
 
             print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',
-                'Estamos en nivel cambiar',
-                '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',
-                c.THREADS_CRONOMETRO,
-                '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',
-                msg)
+                  'Estamos en nivel cambiar',
+                  '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',
+                  c.THREADS_CRONOMETRO,
+                  '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',
+                  msg)
 
             # NOTA [Importante, hay que cambiar el nivel4 por otro
             # en el caso que se mueva el orde]
@@ -376,7 +378,7 @@ def nivel_final(jsonMsg):
     try:
         try:
             c.SEGURO_INTERACCIONES.index(flask.request.sid)
-            
+
         except ValueError: 
             c.SEGURO_INTERACCIONES.append(flask.request.sid)
 
@@ -408,7 +410,7 @@ def nivel_final(jsonMsg):
             else:
                 raise SocketIOEventos({
                     'userSeleccion': 'no recivimos el ID del participante'
-                    })
+                })
     except TypeError:
         return
 
@@ -418,6 +420,7 @@ def popUp_confirmacion(jsonMsg):
     # print(flask.request.sid)
     try:
         msg = json.loads(jsonMsg)
+        updateModoDeJuego.update()
         if len(msg['type']) >= 0:
             ''' Aqui ejecutamos la funcion '''
 
@@ -442,7 +445,7 @@ def popUp_confirmacion(jsonMsg):
         else:
             raise SocketIOEventos({
                 'userSeleccion': 'no recivimos el ID del participante'
-                })
+            })
     except TypeError:
         return
 
@@ -450,7 +453,7 @@ def popUp_confirmacion(jsonMsg):
 @socketio.on('/player/abandonarJuego')
 def change_player_to_user(jsonMsg):
     """[Funcion en donde cambiamos al player to user
-        esto significa que pasara de ser un jugador a un
+    esto significa que pasara de ser un jugador a un
         usuario nada mas]
     """
     try:
@@ -480,7 +483,7 @@ def change_player_to_user(jsonMsg):
         else:
             raise SocketIOEventos({
                 'userUnirme': 'no recivimos el ID del participante'
-                })
+            })
     except TypeError:
         return
 
@@ -491,6 +494,7 @@ def change_player_to_user(jsonMsg):
 def resetAll(jsonMsg):
     try:
         msg = json.loads(jsonMsg)
+        updateModoDeJuego.update()
         if len(msg['ID']) >= 0:
             reset.resetSesion()
             asyncio.run(webSocketMessage.sendMessage(msg='CambioDeNivel'))
@@ -501,7 +505,7 @@ def resetAll(jsonMsg):
         else:
             raise SocketIOEventos({
                 'userStart': 'no recivimos el ID del participante'
-                })
+            })
     except TypeError:
         return
 
@@ -585,7 +589,7 @@ async def main(task=3):
         print(f"Fnished processing, got results: {results}")
 # ------------------------------------------------------------------------- 
 # ------------------------------------------------------------------------- 
-                                        
+
 
 if __name__ == '__main__':
     asyncio.run(main())
